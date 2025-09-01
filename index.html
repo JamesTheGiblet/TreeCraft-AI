@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TreeCraft AI - Intelligent File Structure Analyzer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.29.0/components/prism-markup-templating.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.29.0/components/prism-markdown.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <style>
+        /* Global & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Animated Background */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(12, 12, 12, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .nav-btn:hover {
+            border-color: #00d4ff;
+            color: #00d4ff;
+            transform: translateY(-2px);
+        }
+
+        /* Page Header */
+        .page-header {
+            padding-top: 150px;
+            padding-bottom: 60px;
+            text-align: center;
+            position: relative;
+        }
+
+        .page-header h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff, #00d4ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.3));
+            }
+            to {
+                filter: drop-shadow(0 0 40px rgba(255, 0, 255, 0.5));
+            }
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+            max-width: 700px;
+            margin: 0 auto 2rem;
+        }
+
+        /* Step-by-Step Guide */
+        .guide-section {
+            margin: 4rem 0;
+            text-align: center;
+        }
+
+        .guide-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #00d4ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .step-card {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .step-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.2);
+        }
+
+        .step-card.active {
+            border-color: #00d4ff;
+            box-shadow: 0 15px 35px rgba(0, 212, 255, 0.3);
+        }
+
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #00d4ff, #ff00ff);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .step-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+
+        .step-description {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-action {
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            color: #00d4ff;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .step-action:hover {
+            background: #00d4ff;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Statistics Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .stat-item {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00d4ff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+        }
+
+        /* Main Workspace */
+        .workspace {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            margin: 3rem 0;
+            min-height: 500px;
+            transition: all 0.3s ease;
+        }
+
+        .workspace.active {
+            border-color: rgba(0, 212, 255, 0.5);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.1);
+        }
+
+        .workspace-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .workspace-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+
+        .workspace-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1rem;
+        }
+
+        /* Input Areas */
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-card {
+            background: rgba(12, 12, 12, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-card:hover {
+            border-color: rgba(0, 212, 255, 0.3);
+        }
+
+        .input-card.active {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .input-label {
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(12, 12, 12, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #ffffff;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 200px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+        }
+
+        /* File Drop Zone */
+        .file-drop-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin: 1rem 0;
+            background: rgba(12, 12, 12, 0.3);
+        }
+
+        .file-drop-zone:hover, .file-drop-zone.dragover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .file-drop-zone .drop-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.7;
+        }
+
+        .file-drop-zone .drop-text {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .file-drop-zone .drop-subtext {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #ff00ff);
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.5);
+        }
+
+        .btn-ai {
+            background: linear-gradient(135deg, #50fa7b, #00d4ff);
+            color: white;
+            box-shadow: 0 10px 30px rgba(80, 250, 123, 0.3);
+        }
+
+        .btn-ai:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(80, 250, 123, 0.5);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            border-color: #00d4ff;
+            color: #00d4ff;
+            transform: translateY(-3px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Output Section */
+        .output-section {
+            margin-top: 3rem;
+        }
+
+        .format-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            background: rgba(12, 12, 12, 0.5);
+            padding: 4px;
+            border-radius: 50px;
+            width: fit-content;
+            margin: 0 auto 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 46px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #00d4ff, #ff00ff);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .output-container {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 16px;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .output-header {
+            background: rgba(12, 12, 12, 0.5);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .output-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .output-content {
+            padding: 24px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .tree-output {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            background: rgba(0, 0, 0, 0.5);
+            color: #e5e5e5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 0;
+        }
+
+        /* Progress Indicator */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #00d4ff, #ff00ff);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* Helper Text */
+        .helper-text {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .helper-text .icon {
+            margin-right: 0.5rem;
+        }
+
+        /* Messages */
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .message.success {
+            background: rgba(80, 250, 123, 0.2);
+            color: #50fa7b;
+            border: 1px solid rgba(80, 250, 123, 0.3);
+        }
+
+        .message.error {
+            background: rgba(255, 85, 85, 0.2);
+            color: #ff5555;
+            border: 1px solid rgba(255, 85, 85, 0.3);
+        }
+
+        .message.info {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.95);
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+            border-left: 1px solid rgba(59, 130, 246, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .settings-panel.open {
+            right: 0;
+        }
+
+        .settings-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, #00d4ff, #ff00ff);
+            color: white;
+        }
+
+        .settings-content {
+            padding: 24px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+
+        /* Loading Animation */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Utilities */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-2 { margin-top: 1rem; }
+        .mb-2 { margin-bottom: 1rem; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .input-section {
+                grid-template-columns: 1fr;
+            }
+
+            .steps-container {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .format-tabs {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .settings-panel {
+                width: 100%;
+                right: -100%;
+            }
+        }
+
+        /* Floating particles */
+        .particle {
+            position: absolute;
+            background: linear-gradient(135deg, #00d4ff, #ff00ff);
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+    
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="nav-content">
+                <a href="#" class="logo">TreeCraft AI</a>
+                <div class="nav-actions">
+                    <button class="nav-btn" onclick="toggleSettings()">⚙️ Settings</button>
+                    <button class="nav-btn" onclick="showHelp()">❓ Help</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>TreeCraft AI</h1>
+            <p>Transform your project structures into beautiful, intelligent visualizations with AI-powered insights and step-by-step guidance</p>
+        </div>
+
+        <!-- Step-by-Step Guide -->
+        <div class="guide-section">
+            <h2 class="guide-title">🚀 Get Started in 3 Easy Steps</h2>
+            <div class="steps-container">
+                <div class="step-card active" id="step1" onclick="activateStep(1)">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">📁</div>
+                    <h3 class="step-title">Choose Your Source</h3>
+                    <p class="step-description">Import from GitHub repository, upload a file, or manually enter your project structure</p>
+                    <button class="step-action" onclick="scrollToWorkspace()">Start Here</button>
+                </div>
+                
+                <div class="step-card" id="step2" onclick="activateStep(2)">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">🔧</div>
+                    <h3 class="step-title">Generate & Customize</h3>
+                    <p class="step-description">Create beautiful tree visualizations in multiple formats with customization options</p>
+                    <button class="step-action" onclick="focusGeneration()">Generate</button>
+                </div>
+                
+                <div class="step-card" id="step3" onclick="activateStep(3)">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">🤖</div>
+                    <h3 class="step-title">AI Analysis & Export</h3>
+                    <p class="step-description">Get intelligent insights, copy to clipboard, or download your visualization</p>
+                    <button class="step-action" onclick="focusOutput()">Analyze</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <!-- Statistics Grid -->
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-number" id="totalFiles">0</span>
+                <div class="stat-label">Files Analyzed</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="totalFolders">0</span>
+                <div class="stat-label">Folders Found</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="maxDepth">0</span>
+                <div class="stat-label">Max Depth</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="fileTypes">0</span>
+                <div class="stat-label">File Types</div>
+            </div>
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="workspace" id="mainWorkspace">
+            <div class="workspace-header">
+                <h2 class="workspace-title">✨ Your Creative Workspace</h2>
+                <p class="workspace-subtitle">Choose your preferred method to get started</p>
+            </div>
+
+            <div class="input-section">
+                <!-- GitHub Input -->
+                <div class="input-card" id="githubCard">
+                    <label class="input-label">🔗 GitHub Repository</label>
+                    <input 
+                        type="text" 
+                        id="githubUrl" 
+                        class="form-control" 
+                        placeholder="https://github.com/username/repository"
+                        oninput="updateProgress()"
+                    >
+                    <div class="helper-text mt-2">
+                        <span class="icon">💡</span>
+                        Paste any public GitHub repository URL to automatically analyze its structure
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-ai" onclick="generateAIDocumentation()">
+                            🤖 AI Documentation
+                        </button>
+                        <button class="btn btn-primary" onclick="fetchFromGitHub()">
+                            <span id="githubBtnText">Analyze Repository</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Manual Input -->
+                <div class="input-card" id="manualCard">
+                    <label class="input-label">📝 Manual Input</label>
+                    
+                    <div class="file-drop-zone" onclick="document.getElementById('fileInput').click()">
+                        <div class="drop-icon">📁</div>
+                        <div class="drop-text">Drop files here or click to browse</div>
+                        <div class="drop-subtext">Supports .txt, .md, and structured file lists</div>
+                    </div>
+                    <input type="file" id="fileInput" class="hidden" accept=".txt,.md" onchange="handleFileUpload(event)">
+                    
+                    <textarea 
+                        id="manualInput" 
+                        class="form-control" 
+                        placeholder="Enter your file structure:&#10;project/&#10;├── src/&#10;│   ├── components/&#10;│   └── pages/&#10;└── README.md"
+                        oninput="updateProgress()"
+                    ></textarea>
+                    
+                    <div class="helper-text mt-2">
+                        <span class="icon">💡</span>
+                        Use standard tree notation or simple folder/file lists
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-ai" onclick="analyzeWithAI()">
+                            🤖 AI Analysis
+                        </button>
+                        <button class="btn btn-primary" onclick="processManualInput()">
+                            Generate Tree
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Status -->
+            <div id="statusMessage" class="message info hidden">
+                <span class="icon">ℹ️</span>
+                <span id="statusText">Ready to begin! Choose an input method above.</span>
+            </div>
+        </div>
+
+        <!-- Output Section -->
+        <div class="workspace output-section" id="outputWorkspace">
+            <div class="workspace-header">
+                <h2 class="workspace-title">📊 Your Beautiful Visualization</h2>
+                <p class="workspace-subtitle">View, customize, and export your file tree</p>
+            </div>
+            
+            <div class="format-tabs">
+                <button class="tab active" onclick="switchTab('ascii')">📝 ASCII Tree</button>
+                <button class="tab" onclick="switchTab
